@@ -23,7 +23,7 @@ module OmniAuth
       end
 
       def callback_phase
-        slug = request.params['origin']
+        slug = request.params['origin'].delete('/')
         account = Account.find_by(slug: slug)
         @app_event = account.app_events.where(id: options.app_options.app_event_id).first_or_create(activity_type: 'sso')
 
@@ -106,8 +106,7 @@ module OmniAuth
       end
 
       def login_page_url_with_redirect
-        slug = request.params['origin'].delete('/')
-        "#{options.client_options.login_page_url}?redirect_url=#{callback_url}?origin=#{slug}"
+        "#{options.client_options.login_page_url}?redirect_url=#{callback_url}"
       end
 
       def user_info_url
