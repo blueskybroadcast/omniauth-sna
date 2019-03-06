@@ -106,7 +106,8 @@ module OmniAuth
       end
 
       def login_page_url_with_redirect
-        "#{options.client_options.login_page_url}?redirect_url=#{callback_url}&origin=#{request.params['origin']}"
+        slug = request.params['origin'].delete('/')
+        "#{options.client_options.login_page_url}?redirect_url=#{callback_url}?origin=#{slug}"
       end
 
       def user_info_url
