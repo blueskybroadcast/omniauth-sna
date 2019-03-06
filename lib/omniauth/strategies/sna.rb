@@ -49,9 +49,7 @@ module OmniAuth
       end
 
       def get_user_info
-        RestClient.proxy = proxy_url unless proxy_url.nil?
         request_params = { id: request.params['id'], ln: request.params['ln'], token: options.client_options.token }
-
         request_log_text = "#{provider_name} Get Member Info Request:\nGET #{user_info_url}, params: #{request_params.merge(token: Provider::SECURITY_MASK)}"
         @app_event.logs.create(level: 'info', text: request_log_text)
 
