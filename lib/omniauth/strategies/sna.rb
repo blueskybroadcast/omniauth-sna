@@ -27,10 +27,6 @@ module OmniAuth
         account = Account.find_by(slug: slug)
         @app_event = account.app_events.where(id: options.app_options.app_event_id).first_or_create(activity_type: 'sso')
 
-        self.access_token = {
-          token: request.params['TOKEN'],
-          token_expires: 60
-        }
         self.env['omniauth.auth'] = auth_hash
         self.env['omniauth.origin'] = '/' + slug
         self.env['omniauth.app_event_id'] = @app_event.id
