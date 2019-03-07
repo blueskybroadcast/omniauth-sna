@@ -23,7 +23,7 @@ module OmniAuth
       end
 
       def callback_phase
-        slug = request.params['origin'].delete('/')
+        slug = account_slug
         account = Account.find_by(slug: slug)
         @app_event = account.app_events.where(id: options.app_options.app_event_id).first_or_create(activity_type: 'sso')
 
@@ -54,8 +54,8 @@ module OmniAuth
         @app_event.logs.create(level: 'info', text: request_log_text)
 
         begin
-          response = RestClient.get(user_info_url, params: params)
-        rescue RestClient::ExceptionWithResponse => _error
+          response = RestClient.get(user_info_url, params: request_params)
+        rescue RestClient::ExceptionWithResponse => e
           error_log_text = "#{provider_name} Get Member Info Response Error #{e.message} (code: #{e.response&.code}):\n#{e.response}"
           @app_event.logs.create(level: 'error', text: error_log_text)
           @app_event.fail!
@@ -104,7 +104,9 @@ module OmniAuth
       end
 
       def login_page_url_with_redirect
-        "#{options.client_options.login_page_url}?redirect_url=#{callback_url}"
+        callback_uri = URI.parse(callback_url)
+        redirect_url = callback_uri.to_s.gsub("#{callback_uri.query}", 'id=&ln=')
+        "#{options.client_options.login_page_url}?returnUrl=#{redirect_url}"
       end
 
       def user_info_url
@@ -113,6 +115,12 @@ module OmniAuth
 
       def provider_name
         options.name
+      end
+
+      def account_slug
+        request.params['slug'].presence ||
+          self.env['omniauth.origin']&.gsub(/\//, '') ||
+          session['omniauth.origin']&.gsub(/\//, '')
       end
     end
   end
