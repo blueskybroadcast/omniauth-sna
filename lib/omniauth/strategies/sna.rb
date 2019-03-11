@@ -60,8 +60,8 @@ module OmniAuth
 
         response_log_text = "#{provider_name} Get Member Info Response (code: #{response.code}): \n#{response.body}"
         @app_event.logs.create(level: 'info', text: response_log_text)
-
-        parsed_user_node = MultiXml.parse(response).dig('string', 'NewDataSet', 'Webuser')
+        parsed_response = MultiXml.parse(response)['string']
+        parsed_user_node = MultiXml.parse(parsed_response).dig('NewDataSet', 'Webuser')
 
         unless parsed_user_node
           error_log_text = "#{provider_name} Get Member Info: User not found!"
@@ -100,9 +100,15 @@ module OmniAuth
       end
 
       def login_page_url_with_redirect
-        callback_uri = URI.parse(callback_url)
-        redirect_url = callback_uri.to_s.gsub("#{callback_uri.query}", 'id=&ln=')
-        "#{options.client_options.login_page_url}?returnUrl=#{redirect_url}"
+        "#{options.client_options.login_page_url}?returnUrl=#{return_url_key}"
+      end
+
+      def return_url_key
+        current_url = URI.parse(full_host)
+        return 'Local' if current_url.scheme == 'http'
+        return 'Dev' if current_url.host =~ /dev.pathlms/
+        return 'Staging' if current_url.host =~ /staging.pathlms/
+        'Production'
       end
 
       def user_info_url
